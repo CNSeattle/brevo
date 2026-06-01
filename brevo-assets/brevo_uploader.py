@@ -44,15 +44,6 @@ GITHUB_API_URL = 'https://api.github.com'
 OUTPUT_FILE_PATH = 'Extras/brevo-assets/brevo-asset-url.md'
 MAPPING_FILE_PATH = 'Extras/brevo-assets/brevo-asset-mapping.json'
 
-# Load Google Drive ID mapping
-def load_drive_mapping():
-    """Load filename to Google Drive ID mapping"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    mapping_path = os.path.join(script_dir, 'brevo-asset-mapping.json')
-    if os.path.exists(mapping_path):
-        with open(mapping_path, 'r') as f:
-            return json.load(f)
-    return {}
 
 
 def validate_config():
@@ -94,7 +85,7 @@ def upload_to_brevo(image_url, image_name):
         return None
 
 
-def process_images(image_list, drive_mapping):
+def process_images(image_list):
     """Process list of image filenames and upload to Brevo"""
     results = []
 
@@ -103,13 +94,7 @@ def process_images(image_list, drive_mapping):
         if not image_file:
             continue
 
-        # Get Google Drive ID from mapping
-        if image_file not in drive_mapping:
-            print(f"Uploading: {image_file}... ✗ (not found in brevo-asset-mapping.json)")
-            continue
-
-        drive_id = drive_mapping[image_file]
-        image_url = f'https://drive.google.com/uc?id={drive_id}&export=download'
+        image_url = f'https://raw.githubusercontent.com/CNSeattle/brevo/main/brevo-assets/{image_file}'
 
         print(f"Uploading: {image_file}...", end=' ')
         brevo_url = upload_to_brevo(image_url, image_file)
@@ -118,7 +103,6 @@ def process_images(image_list, drive_mapping):
             print("✓")
             results.append({
                 'filename': image_file,
-                'drive_url': image_url,
                 'brevo_url': brevo_url
             })
         else:
@@ -197,9 +181,6 @@ def format_markdown(results):
 def main():
     validate_config()
 
-    # Load Google Drive ID mapping
-    drive_mapping = load_drive_mapping()
-
     # Get image list from command line or file
     if len(sys.argv) > 1:
         # Command line arguments (space-separated filenames)
@@ -216,7 +197,7 @@ def main():
             sys.exit(1)
 
     # Process images
-    results = process_images(image_list, drive_mapping)
+    results = process_images(image_list)
 
     if results:
         # Format and push to GitHub
