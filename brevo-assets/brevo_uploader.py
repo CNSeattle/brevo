@@ -200,8 +200,14 @@ def main():
     results = process_images(image_list)
 
     if results:
-        # Format and push to GitHub
+        # Format and write to local file and push to GitHub
         content = format_markdown(results)
+
+        # Write to local file
+        with open(OUTPUT_FILE_PATH, 'w') as f:
+            f.write(content)
+        print(f"✓ Results written to: {OUTPUT_FILE_PATH}")
+
         push_to_github(content, OUTPUT_FILE_PATH)
         print(f"\n✓ Successfully uploaded {len(results)} images")
     else:
